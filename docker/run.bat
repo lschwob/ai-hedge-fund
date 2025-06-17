@@ -162,7 +162,7 @@ if !ERRORLEVEL! EQU 0 (
 
 :: Build the Docker image if 'build' command is provided
 if "!COMMAND!"=="build" (
-    docker build -t ai-hedge-fund -f Dockerfile ..
+    docker build -t ai-hedge-fund -f docker/Dockerfile ..
     exit /b 0
 )
 
@@ -298,7 +298,7 @@ if not "!USE_OLLAMA!"=="" (
     docker images -q ai-hedge-fund 2>nul | findstr /r /c:"^..*$" >nul
     if !ERRORLEVEL! NEQ 0 (
         echo Building AI Hedge Fund image...
-        docker build -t ai-hedge-fund .
+        docker build -t ai-hedge-fund -f docker/Dockerfile ..
     )
     
     :: Create command override for Docker Compose
