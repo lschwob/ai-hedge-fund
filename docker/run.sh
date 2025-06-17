@@ -139,7 +139,7 @@ fi
 
 # Build the Docker image if 'build' command is provided
 if [ "$COMMAND" = "build" ]; then
-  docker build -t ai-hedge-fund -f Dockerfile ..
+  docker build -t ai-hedge-fund -f docker/Dockerfile ..
   exit 0
 fi
 
@@ -267,7 +267,7 @@ if [ -n "$USE_OLLAMA" ]; then
   # Build the AI Hedge Fund image if needed
   if [[ "$(docker images -q ai-hedge-fund 2> /dev/null)" == "" ]]; then
     echo "Building AI Hedge Fund image..."
-    docker build -t ai-hedge-fund .
+    docker build -t ai-hedge-fund -f docker/Dockerfile ..
   fi
   
   # Create command override for Docker Compose
