@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import requests
 import time
+import yfinance as yf
 
 from src.data.cache import get_cache
 from src.data.models import (
@@ -22,6 +23,26 @@ from src.data.models import (
 # Global cache instance
 _cache = get_cache()
 
+
+def _get_prices_yahoo(ticker: str, start_date: str, end_date: str) -> list[Price]:
+    """Fetch daily prices from Yahoo Finance."""
+    df = yf.download(ticker, start=start_date, end=end_date, progress=False, interval="1d")
+    if df.empty:
+        return []
+
+    prices = []
+    for idx, row in df.iterrows():
+        prices.append(
+            Price(
+                open=float(row["Open"]),
+                close=float(row["Close"]),
+                high=float(row["High"]),
+                low=float(row["Low"]),
+                volume=int(row["Volume"]),
+                time=idx.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            )
+        )
+    return prices
 
 def _make_api_request(url: str, headers: dict, method: str = "GET", json_data: dict = None, max_retries: int = 3) -> requests.Response:
     """
@@ -66,24 +87,31 @@ def get_prices(ticker: str, start_date: str, end_date: str) -> list[Price]:
     if cached_data := _cache.get_prices(cache_key):
         return [Price(**price) for price in cached_data]
 
-    # If not in cache, fetch from API
-    headers = {}
-    if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
-        headers["X-API-KEY"] = api_key
+    api_key = os.environ.get("FINANCIAL_DATASETS_API_KEY")
+    use_yahoo = os.environ.get("USE_YAHOO_FINANCE", "false").lower() == "true"
 
-    url = f"https://api.financialdatasets.ai/prices/?ticker={ticker}&interval=day&interval_multiplier=1&start_date={start_date}&end_date={end_date}"
+    if not api_key or use_yahoo:
+        prices = _get_prices_yahoo(ticker, start_date, end_date)
+        if prices:
+            _cache.set_prices(cache_key, [p.model_dump() for p in prices])
+        return prices
+
+    headers = {"X-API-KEY": api_key}
+    url = (
+        f"https://api.financialdatasets.ai/prices/?ticker={ticker}&interval=day&interval_multiplier=1&start_date={start_date}&end_date={end_date}"
+    )
     response = _make_api_request(url, headers)
     if response.status_code != 200:
-        raise Exception(f"Error fetching data: {ticker} - {response.status_code} - {response.text}")
+        raise Exception(
+            f"Error fetching data: {ticker} - {response.status_code} - {response.text}"
+        )
 
-    # Parse response with Pydantic model
     price_response = PriceResponse(**response.json())
     prices = price_response.prices
 
     if not prices:
         return []
 
-    # Cache the results using the comprehensive cache key
     _cache.set_prices(cache_key, [p.model_dump() for p in prices])
     return prices
 
