@@ -46,6 +46,8 @@ GROQ_API_KEY=your-groq-api-key
 
 # For getting financial data to power the hedge fund
 FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
+# If you don't have an API key, set this to true to use Yahoo Finance for prices
+USE_YAHOO_FINANCE=true
 ```
 
 ## Running the Server

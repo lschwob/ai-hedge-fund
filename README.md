@@ -91,6 +91,8 @@ GROQ_API_KEY=your-groq-api-key
 # For getting financial data to power the hedge fund
 # Get your Financial Datasets API key from https://financialdatasets.ai/
 FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
+# If you don't have an API key, you can still fetch prices using Yahoo Finance
+USE_YAHOO_FINANCE=true
 ```
 
 ### Using Docker
@@ -129,7 +131,7 @@ run.bat build
 
 Financial data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key.
 
-For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in the .env file.
+For any other ticker, you can either set the `FINANCIAL_DATASETS_API_KEY` or enable the Yahoo Finance fallback by setting `USE_YAHOO_FINANCE=true` in the `.env` file.
 
 ## Usage
 
